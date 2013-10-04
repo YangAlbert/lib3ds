@@ -1,4 +1,27 @@
 
+This repository contains (will contain) versions of lib3ds that I
+modified to store/use extra information in 3DS files. The extra
+information are: per vertex normals, per vertex skinning information,
+extra material parameters, and an extra texture coordinate pair.
+
+I have a proprietary 3ds file handler that I use in my own software, but
+I am adding support for the extra information to lib3ds in hopes that 
+it will eventually get wider use. In particular by AC3D and MeshLab, which
+I use to tweak meshes. AC3D seems to use lib3ds 1.2.0, so the master branch
+will remain that version. 1.3.0 and 2.0.0-rc1 versions will be in their own
+branches.
+
+lib3ds is licensed under the LGPL, so these versions are as well. However
+the extra information / my changes may be used in other 3ds file handlers,
+whether open or closed source, with or without attributation.
+
+As I said earlier, I have proprietary software that I use to read/write 3DS
+files in my own software, so these lib3ds versions will not be well tested.
+
+
+
+The original lib3ds readme is below:
+
 Lib3ds is a free alternative to Autodesk's 3DS File Toolkit for handling 
 3DS files Its main goal is to simplify the creation of 3DS import and 
 export filters. 
