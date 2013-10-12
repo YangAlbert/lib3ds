@@ -180,6 +180,8 @@ typedef enum _Lib3dsChunks {
   LIB3DS_FACE_ARRAY             =0x4120,
   LIB3DS_MSH_MAT_GROUP          =0x4130,
   LIB3DS_SMOOTH_GROUP           =0x4150,
+  LIB3DS_NORMAL_ARRAY           =0x4152,
+  LIB3DS_FACE_NORMAL_ARRAY      =0x4154,
   LIB3DS_MSH_BOXMAP             =0x4190,
   LIB3DS_TEX_VERTS              =0x4140,
   LIB3DS_MESH_MATRIX            =0x4160,

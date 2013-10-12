@@ -110,6 +110,10 @@ struct _Lib3dsMesh {
     Lib3dsFace *faceL;
     Lib3dsBoxMap box_map;
     Lib3dsMapData map_data;
+    /* additional variables */
+    Lib3dsWord normaltype;
+    Lib3dsDword normals;
+    Lib3dsPoint *normalL;
 }; 
 
 extern LIB3DSAPI Lib3dsMesh* lib3ds_mesh_new(const char *name);
@@ -122,6 +126,8 @@ extern LIB3DSAPI Lib3dsBool lib3ds_mesh_new_texel_list(Lib3dsMesh *mesh, Lib3dsD
 extern LIB3DSAPI void lib3ds_mesh_free_texel_list(Lib3dsMesh *mesh);
 extern LIB3DSAPI Lib3dsBool lib3ds_mesh_new_face_list(Lib3dsMesh *mesh, Lib3dsDword flags);
 extern LIB3DSAPI void lib3ds_mesh_free_face_list(Lib3dsMesh *mesh);
+extern LIB3DSAPI Lib3dsBool lib3ds_mesh_new_normal_list(Lib3dsMesh *mesh, Lib3dsDword normals);
+extern LIB3DSAPI void lib3ds_mesh_free_normal_list(Lib3dsMesh *mesh);
 extern LIB3DSAPI void lib3ds_mesh_bounding_box(Lib3dsMesh *mesh, Lib3dsVector min, Lib3dsVector max);
 extern LIB3DSAPI void lib3ds_mesh_calculate_normals(Lib3dsMesh *mesh, Lib3dsVector *normalL);
 extern LIB3DSAPI void lib3ds_mesh_dump(Lib3dsMesh *mesh);

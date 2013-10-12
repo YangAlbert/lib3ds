@@ -44,6 +44,8 @@ extern LIB3DSAPI Lib3dsFloat lib3ds_vector_length(Lib3dsVector c);
 extern LIB3DSAPI void lib3ds_vector_normalize(Lib3dsVector c);
 extern LIB3DSAPI void lib3ds_vector_normal(Lib3dsVector n, Lib3dsVector a,
   Lib3dsVector b, Lib3dsVector c);
+extern LIB3DSAPI void lib3ds_vector_normal_average(Lib3dsVector n, Lib3dsVector a,
+  Lib3dsVector b, Lib3dsVector c);
 extern LIB3DSAPI void lib3ds_vector_transform(Lib3dsVector c, Lib3dsMatrix m, Lib3dsVector a);
 extern LIB3DSAPI void lib3ds_vector_cubic(Lib3dsVector c, Lib3dsVector a, Lib3dsVector p,
   Lib3dsVector q, Lib3dsVector b, Lib3dsFloat t);

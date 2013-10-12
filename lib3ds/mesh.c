@@ -78,6 +78,19 @@ face_array_read(Lib3dsMesh *mesh, Lib3dsIo *io)
             for (i=0; i<mesh->faces; ++i) {
               mesh->faceL[i].smoothing=lib3ds_io_read_dword(io);
             }
+            mesh->normaltype = LIB3DS_SMOOTH_GROUP;
+          }
+          break;
+        case LIB3DS_FACE_NORMAL_ARRAY:
+          {
+            unsigned i;
+
+            for (i=0; i<mesh->faces; ++i) {
+              for (j=0; j<3; ++j) {
+                mesh->faceL[i].normal[j]=lib3ds_io_read_float(io);
+              }
+            }
+            mesh->normaltype = LIB3DS_FACE_NORMAL_ARRAY;
           }
           break;
         case LIB3DS_MSH_MAT_GROUP:
@@ -170,6 +183,7 @@ lib3ds_mesh_free(Lib3dsMesh *mesh)
   lib3ds_mesh_free_point_list(mesh);
   lib3ds_mesh_free_flag_list(mesh);
   lib3ds_mesh_free_texel_list(mesh);
+  lib3ds_mesh_free_normal_list(mesh);
   lib3ds_mesh_free_face_list(mesh);
   memset(mesh, 0, sizeof(Lib3dsMesh));
   free(mesh);
@@ -298,6 +312,48 @@ lib3ds_mesh_free_texel_list(Lib3dsMesh *mesh)
   }
   else {
     ASSERT(!mesh->texels);
+  }
+}
+
+
+/*!
+ * \ingroup mesh
+ */
+Lib3dsBool
+lib3ds_mesh_new_normal_list(Lib3dsMesh *mesh, Lib3dsDword normals)
+{
+  ASSERT(mesh);
+  if (mesh->normalL) {
+    ASSERT(mesh->normals);
+    lib3ds_mesh_free_normal_list(mesh);
+  }
+  ASSERT(!mesh->normalL && !mesh->normals);
+  mesh->normals=0;
+  mesh->normalL=calloc(sizeof(Lib3dsPoint)*normals,1);
+  if (!mesh->normalL) {
+    LIB3DS_ERROR_LOG;
+    return(LIB3DS_FALSE);
+  }
+  mesh->normals=normals;
+  return(LIB3DS_TRUE);
+}
+
+
+/*!
+ * \ingroup mesh
+ */
+void
+lib3ds_mesh_free_normal_list(Lib3dsMesh *mesh)
+{
+  ASSERT(mesh);
+  if (mesh->normalL) {
+    ASSERT(mesh->normals);
+    free(mesh->normalL);
+    mesh->normalL=0;
+    mesh->normals=0;
+  }
+  else {
+    ASSERT(!mesh->normals);
   }
 }
 
@@ -571,6 +627,7 @@ lib3ds_mesh_read(Lib3dsMesh *mesh, Lib3dsIo *io)
             }
             ASSERT((!mesh->flags) || (mesh->points==mesh->flags));
             ASSERT((!mesh->texels) || (mesh->points==mesh->texels));
+            ASSERT((!mesh->normals) || (mesh->points==mesh->normals));
           }
         }
         break;
@@ -591,6 +648,7 @@ lib3ds_mesh_read(Lib3dsMesh *mesh, Lib3dsIo *io)
             }
             ASSERT((!mesh->points) || (mesh->flags==mesh->points));
             ASSERT((!mesh->texels) || (mesh->flags==mesh->texels));
+            ASSERT((!mesh->normals) || (mesh->flags==mesh->normals));
           }
         }
         break;
@@ -644,6 +702,30 @@ lib3ds_mesh_read(Lib3dsMesh *mesh, Lib3dsIo *io)
             }
             ASSERT((!mesh->points) || (mesh->texels==mesh->points));
             ASSERT((!mesh->flags) || (mesh->texels==mesh->flags));
+            ASSERT((!mesh->normals) || (mesh->texels==mesh->normals));
+          }
+        }
+        break;
+      case LIB3DS_NORMAL_ARRAY:
+        {
+          unsigned i,j;
+          unsigned normals;
+          
+          lib3ds_mesh_free_normal_list(mesh);
+          normals=lib3ds_io_read_word(io);
+          if (normals) {
+            if (!lib3ds_mesh_new_normal_list(mesh, normals)) {
+              LIB3DS_ERROR_LOG;
+              return(LIB3DS_FALSE);
+            }
+            for (i=0; i<mesh->normals; ++i) {
+              for (j=0; j<3; ++j) {
+                mesh->normalL[i].pos[j]=lib3ds_io_read_float(io);
+              }
+            }
+            ASSERT((!mesh->points) || (mesh->normals==mesh->points));
+            ASSERT((!mesh->flags) || (mesh->normals==mesh->flags));
+            ASSERT((!mesh->texels) || (mesh->normals==mesh->texels));
           }
         }
         break;
@@ -651,9 +733,31 @@ lib3ds_mesh_read(Lib3dsMesh *mesh, Lib3dsIo *io)
         lib3ds_chunk_unknown(chunk);
     }
   }
-  {
+  if (mesh->normaltype == LIB3DS_FACE_NORMAL_ARRAY) {
+    for (j=0; j<mesh->faces; ++j) {
+      ASSERT(mesh->faceL[j].points[0]<mesh->points);
+      ASSERT(mesh->faceL[j].points[1]<mesh->points);
+      ASSERT(mesh->faceL[j].points[2]<mesh->points);
+      mesh->faceL[j].smoothing = 0;
+    }
+  } else
+  if (mesh->normals) {
     unsigned j;
-
+    for (j=0; j<mesh->faces; ++j) {
+      ASSERT(mesh->faceL[j].points[0]<mesh->points);
+      ASSERT(mesh->faceL[j].points[1]<mesh->points);
+      ASSERT(mesh->faceL[j].points[2]<mesh->points);
+      mesh->faceL[j].smoothing = 0;
+      lib3ds_vector_normal_average(
+        mesh->faceL[j].normal,
+        mesh->normalL[mesh->faceL[j].points[0]].pos,
+        mesh->normalL[mesh->faceL[j].points[1]].pos,
+        mesh->normalL[mesh->faceL[j].points[2]].pos
+      );
+    }
+   
+  } else {
+    unsigned j;
     for (j=0; j<mesh->faces; ++j) {
       ASSERT(mesh->faceL[j].points[0]<mesh->points);
       ASSERT(mesh->faceL[j].points[1]<mesh->points);
@@ -665,6 +769,9 @@ lib3ds_mesh_read(Lib3dsMesh *mesh, Lib3dsIo *io)
         mesh->pointL[mesh->faceL[j].points[2]].pos
       );
     }
+    /*if (mesh->normaltype == LIB3DS_SMOOTH_GROUP) {
+      lib3ds_mesh_calculate_normals(mesh, list);
+    }*/
   }
   
   lib3ds_chunk_read_end(&c, io);
@@ -776,8 +883,20 @@ face_array_write(Lib3dsMesh *mesh, Lib3dsIo *io)
     }
     free(matf);
   }
-
-  { /*---- SMOOTH_GROUP ----*/
+  if (!mesh->normals) {
+  if (mesh->normaltype == LIB3DS_FACE_NORMAL_ARRAY) {
+    Lib3dsChunk c;
+    unsigned i;
+    
+    c.chunk=LIB3DS_FACE_NORMAL_ARRAY;
+    c.size=6+12*mesh->faces;
+    lib3ds_chunk_write(&c, io);
+    
+    for (i=0; i<mesh->faces; ++i) {
+      lib3ds_io_write_dword(io, mesh->faceL[i].smoothing);
+    }
+  } else
+  if (mesh->normaltype == LIB3DS_SMOOTH_GROUP){
     Lib3dsChunk c;
     unsigned i;
     
@@ -788,6 +907,7 @@ face_array_write(Lib3dsMesh *mesh, Lib3dsIo *io)
     for (i=0; i<mesh->faces; ++i) {
       lib3ds_io_write_dword(io, mesh->faceL[i].smoothing);
     }
+  }
   }
   
   { /*---- MSH_BOXMAP ----*/
@@ -848,6 +968,28 @@ texel_array_write(Lib3dsMesh *mesh, Lib3dsIo *io)
 }
 
 
+static Lib3dsBool
+normal_array_write(Lib3dsMesh *mesh, Lib3dsIo *io)
+{
+  Lib3dsChunk c;
+  unsigned i;
+
+  if (!mesh->normals || !mesh->normalL) {
+    return(LIB3DS_TRUE);
+  }
+  ASSERT(mesh->normals<0x10000);
+  c.chunk=LIB3DS_NORMAL_ARRAY;
+  c.size=8+12*mesh->normals;
+  lib3ds_chunk_write(&c, io);
+  
+  lib3ds_io_write_word(io, (Lib3dsWord)mesh->normals);
+  for (i=0; i<mesh->normals; ++i) {
+    lib3ds_io_write_vector(io, mesh->normalL[i].pos);
+  }
+  return(LIB3DS_TRUE);
+}
+
+
 /*!
  * \ingroup mesh
  */
@@ -864,6 +1006,9 @@ lib3ds_mesh_write(Lib3dsMesh *mesh, Lib3dsIo *io)
     return(LIB3DS_FALSE);
   }
   if (!texel_array_write(mesh, io)) {
+    return(LIB3DS_FALSE);
+  }
+  if (!normal_array_write(mesh, io)) {
     return(LIB3DS_FALSE);
   }
 

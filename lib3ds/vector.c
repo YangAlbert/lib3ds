@@ -205,6 +205,19 @@ lib3ds_vector_normal(Lib3dsVector n, Lib3dsVector a, Lib3dsVector b, Lib3dsVecto
  * \ingroup vector
  */
 void
+lib3ds_vector_normal_average(Lib3dsVector n, Lib3dsVector a, Lib3dsVector b, Lib3dsVector c)
+{
+  n[0] = (a[0] + b[0] + c[0])/3;
+  n[1] = (a[1] + b[1] + c[1])/3;
+  n[2] = (a[2] + b[2] + c[2])/3;
+  lib3ds_vector_normalize(n);
+}
+
+
+/*!
+ * \ingroup vector
+ */
+void
 lib3ds_vector_transform(Lib3dsVector c, Lib3dsMatrix m, Lib3dsVector a)
 {
   c[0]= m[0][0]*a[0] + m[1][0]*a[1] + m[2][0]*a[2] + m[3][0];

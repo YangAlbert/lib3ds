@@ -13,7 +13,7 @@ branches.
 
 lib3ds is licensed under the LGPL, so these versions are as well. However
 the extra information / my changes may be used in other 3ds file handlers,
-whether open or closed source, with or without attributation.
+whether open or closed source, with or without attribution.
 
 As I said earlier, I have proprietary software that I use to read/write 3DS
 files in my own software, so these lib3ds versions will not be well tested.
